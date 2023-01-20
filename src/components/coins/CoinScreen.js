@@ -8,32 +8,49 @@ import {
 } from 'react-native';
 import Http from '../../libs/http';
 import CoinItem from './CoinItem';
+import CoinSearch from './CoinSearch';
 import colors from '../../res/colors';
 
 class CoinsScreen extends Component {
   state = {
     coins: [],
+    allCoins: [],
     loading: false,
   };
 
-  componentDidMount = async () => {
+  componentDidMount = () => {
+    this.getCoins();
+  };
+
+  getCoins = async () => {
     this.setState({loading: true});
     const res = await Http.instance.get(
       'https://api.coinlore.net/api/tickers/',
     );
 
-    this.setState({coins: res.data, loading: false});
+    this.setState({coins: res.data, allCoins: res.data, loading: false});
   };
 
   handlePress = coin => {
-    console.log('go to detail', this.props);
     this.props.navigation.navigate('CoinDetail', {coin});
+  };
+
+  handleSearch = query => {
+    const {allCoins} = this.state;
+    const coinsFiltered = allCoins.filter(coin => {
+      return (
+        coin.name.toLowerCase().includes(query.toLowerCase()) ||
+        coin.symbol.toLowerCase().includes(query.toLowerCase())
+      );
+    });
+    this.setState({coins: coinsFiltered});
   };
 
   render() {
     const {coins, loading} = this.state;
     return (
       <View style={styles.container}>
+        <CoinSearch onChange={this.handleSearch} />
         {loading ? (
           <ActivityIndicator color="#fff" size="large" style={styles.loader} />
         ) : null}
